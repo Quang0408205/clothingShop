@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoPo - Thời trang nam</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+  <div th:replace="~{fragments/layout :: header}"></div>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="hero-kicker">MOPO — THỜI TRANG NAM</p>
+      <h1>PHONG CÁCH TỐI GIẢN<br>CHUẨN GU PHÁI MẠNH</h1>
+      <p class="hero-sub">Áo · Quần · Giày — chất liệu công nghệ, form dáng hiện đại</p>
+      <a class="btn" href="#products">KHÁM PHÁ NGAY</a>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="section-head" id="products" style="margin-top:30px">
+      <h2 th:text="${selectedCategoryName != null ? selectedCategoryName : 'TẤT CẢ SẢN PHẨM'}">
+        TẤT CẢ SẢN PHẨM
+      </h2>
+      <span class="count" th:text="${#lists.size(products)} + ' sản phẩm'">0 sản phẩm</span>
+    </div>
+
+    <div class="grid">
+      <a class="card" th:each="p : ${products}" th:href="@{/products/{id}(id=${p.id})}">
+        <div class="thumb-wrap">
+          <img class="thumb" th:src="@{'/' + ${p.thumbnail}}" th:alt="${p.name}" loading="lazy">
+        </div>
+        <div class="body">
+          <span class="cat" th:text="${p.category.name}">Danh mục</span>
+          <h3 th:text="${p.name}">Tên sản phẩm</h3>
+          <div class="price-row">
+            <span class="price" th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'NONE')} + 'đ'">0đ</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="load-more-wrap">
+      <button id="loadMoreBtn" class="btn btn-outline" type="button">XEM THÊM</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var STEP = 12;                 // số sản phẩm hiện thêm mỗi lần
+      var cards = Array.prototype.slice.call(document.querySelectorAll('.grid .card'));
+      var btn = document.getElementById('loadMoreBtn');
+      var shown = 0;
+      function render() {
+        cards.forEach(function (c, i) { c.style.display = i < shown ? '' : 'none'; });
+        if (btn) btn.style.display = (shown >= cards.length) ? 'none' : '';
+      }
+      shown = Math.min(STEP, cards.length);
+      render();
+      if (btn) btn.addEventListener('click', function () {
+        shown = Math.min(shown + STEP, cards.length);
+        render();
+      });
+    })();
+  </script>
+
+  <div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>

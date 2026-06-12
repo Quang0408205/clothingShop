@@ -1,0 +1,87 @@
+<!doctype html>
+<div th:replace="admin/layout">
+  <div th:fragment="content" class="max-w-xl mx-auto">
+    <div class="flex items-center gap-3 mb-6">
+      <a href="/admin/users" class="text-gray-400 hover:text-gray-600 text-sm">← Danh sách</a>
+      <h1 class="text-2xl font-semibold">Sửa người dùng</h1>
+    </div>
+
+    <div th:if="${error}" class="mb-4 p-3 rounded-lg bg-red-100 text-red-800 text-sm" th:text="${error}"></div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <form th:action="@{/admin/users/save}" method="post" class="space-y-5">
+        <input type="hidden" name="id" th:value="${user.id}">
+
+        <!-- Email (read-only) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+          <input type="text" th:value="${user.email}" disabled
+                 class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm
+                        bg-gray-50 dark:bg-gray-700/50 text-gray-500 cursor-not-allowed">
+        </div>
+
+        <!-- Họ tên -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Họ và tên <span class="text-red-500">*</span>
+          </label>
+          <input type="text" name="fullName" th:value="${user.fullName}" required
+                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm
+                        bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <!-- Số điện thoại -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Số điện thoại</label>
+          <input type="text" name="phone" th:value="${user.phone}"
+                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm
+                        bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <!-- Vai trò -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vai trò</label>
+          <select name="role"
+                  class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm
+                         bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="CUSTOMER" th:selected="${user.role == 'CUSTOMER'}">CUSTOMER</option>
+            <option value="ADMIN"    th:selected="${user.role == 'ADMIN'}">ADMIN</option>
+          </select>
+        </div>
+
+        <!-- Trạng thái -->
+        <div class="flex items-center gap-3">
+          <input type="hidden" name="enabled" value="false">
+          <input type="checkbox" id="enabled" name="enabled" value="true"
+                 th:checked="${user.enabled}"
+                 class="w-4 h-4 accent-indigo-600">
+          <label for="enabled" class="text-sm font-medium text-gray-700 dark:text-gray-300">Tài khoản đang hoạt động</label>
+        </div>
+
+        <!-- Đổi mật khẩu -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Đặt lại mật khẩu
+            <span class="text-gray-400 text-xs font-normal">(để trống nếu không đổi)</span>
+          </label>
+          <input type="password" name="newPassword"
+                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm
+                        bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 placeholder="Mật khẩu mới...">
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button type="submit"
+                  class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-sm">
+            Lưu thay đổi
+          </button>
+          <a href="/admin/users"
+             class="flex-1 text-center border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300
+                    hover:bg-gray-50 dark:hover:bg-gray-700 font-medium py-2 rounded-lg text-sm">
+            Huỷ
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

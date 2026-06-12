@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="'Đơn hàng #' + ${order.id} + ' — MoPo'">Đơn hàng</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <style>
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center}
+    .modal-overlay.hidden{display:none}
+    .modal-box{background:#fff;border-radius:16px;padding:32px;max-width:360px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+    .modal-icon{width:56px;height:56px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 16px}
+    .modal-title{font-size:18px;font-weight:700;margin-bottom:8px;color:#1a1a1a}
+    .modal-desc{font-size:13px;color:#666;margin-bottom:24px;line-height:1.5}
+    .modal-actions{display:flex;gap:12px}
+    .modal-btn{flex:1;padding:10px 16px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;border:none}
+    .modal-btn-cancel{background:#f3f4f6;color:#374151}
+    .modal-btn-cancel:hover{background:#e5e7eb}
+    .modal-btn-confirm{background:#2563eb;color:#fff}
+    .modal-btn-confirm:hover{background:#1d4ed8}
+    .alert-success{background:#dcfce7;border:1px solid #86efac;color:#166534;padding:14px 18px;border-radius:10px;margin-bottom:16px;font-weight:500;display:flex;align-items:center;gap:8px}
+  </style>
+</head>
+<body>
+  <div th:replace="~{fragments/layout :: header}"></div>
+
+  <div class="container">
+    <!-- Flash messages -->
+    <div class="alert ok" th:if="${msg}" th:text="${msg}"></div>
+    <div class="alert error" th:if="${err}" th:text="${err}"></div>
+
+    <div class="order-success">
+      <div class="check">✓</div>
+      <h1>ĐẶT HÀNG THÀNH CÔNG</h1>
+      <p>Cảm ơn bạn! Đơn hàng <strong th:text="'#' + ${order.id}">#1</strong> đã được ghi nhận.</p>
+    </div>
+
+    <div class="order-box">
+      <div class="order-head">
+        <div>
+          <span class="cat">Mã đơn</span>
+          <h3 th:text="'#' + ${order.id}">#1</h3>
+        </div>
+        <span class="status"
+              th:classappend="${order.status == 'COMPLETED'} ? ' done' : (${order.status == 'CANCELLED'} ? ' cancel' : (${order.status == 'REFUNDING'} ? ' refund' : ' proc'))"
+              th:text="${order.status == 'COMPLETED'} ? 'Hoàn thành' : (${order.status == 'CANCELLED'} ? 'Đã huỷ' : (${order.status == 'REFUNDING'} ? 'Chờ hoàn tiền' : 'Đang xử lý'))">Đang xử lý</span>
+      </div>
+
+      <div class="order-ship">
+        <div><span>Người nhận:</span> <strong th:text="${order.recipientName}">Tên</strong></div>
+        <div><span>Điện thoại:</span> <strong th:text="${order.phone}">SĐT</strong></div>
+        <div><span>Địa chỉ:</span> <strong th:text="${order.address}">Địa chỉ</strong></div>
+        <div><span>Thanh toán:</span>
+          <strong th:text="${order.paymentMethod == 'BANK'} ? 'Chuyển khoản' : 'Tiền mặt'">Tiền mặt</strong></div>
+        <div th:if="${order.note != null and !order.note.isBlank()}">
+          <span>Ghi chú:</span> <strong th:text="${order.note}">...</strong></div>
+      </div>
+
+      <table class="order-table">
+        <thead>
+          <tr><th>Sản phẩm</th><th>Size</th><th>Đơn giá</th><th>SL</th><th>Thành tiền</th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="it : ${order.items}">
+            <td th:text="${it.productName}">Tên</td>
+            <td th:text="${it.size != null ? it.size : '-'}">-</td>
+            <td th:text="${#numbers.formatDecimal(it.price,0,'POINT',0,'NONE')} + 'đ'">0đ</td>
+            <td th:text="${it.quantity}">1</td>
+            <td th:text="${#numbers.formatDecimal(it.lineTotal,0,'POINT',0,'NONE')} + 'đ'">0đ</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="4">TỔNG CỘNG</td>
+            <td class="grand" th:text="${#numbers.formatDecimal(order.totalAmount,0,'POINT',0,'NONE')} + 'đ'">0đ</td></tr>
+        </tfoot>
+      </table>
+
+      <!-- QR thanh toán cho đơn PENDING_PAYMENT -->
+      <div th:if="${order.status == 'PENDING_PAYMENT' and order.paymentMethod == 'BANK'}"
+           style="margin:20px 0;padding:20px;background:#f0f4ff;border:2px solid #818cf8;border-radius:12px;text-align:center">
+        <p style="font-weight:700;font-size:16px;color:#3730a3;margin-bottom:4px">💳 Quét mã QR để thanh toán</p>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:14px">
+          Chuyển khoản đúng số tiền và ghi nội dung <strong style="color:#4f46e5" th:text="'DonHang' + ${order.id}"></strong>
+        </p>
+        <img th:src="@{'https://img.vietqr.io/image/' + ${bankId} + '-' + ${bankAccount} + '-compact2.png?amount=' + ${order.totalAmount.intValue()} + '&addInfo=DonHang' + ${order.id} + '&accountName=' + ${bankName}}"
+             alt="QR Chuyển khoản" style="width:220px;border-radius:10px;border:1px solid #c7d2fe;margin-bottom:12px">
+        <div style="font-size:14px;color:#374151;line-height:1.8">
+          <div>Ngân hàng: <strong th:text="${bankId}"></strong></div>
+          <div>Số tài khoản: <strong th:text="${bankAccount}"></strong></div>
+          <div>Chủ tài khoản: <strong th:text="${bankName}"></strong></div>
+          <div>Số tiền: <strong style="color:#ef4444" th:text="${#numbers.formatDecimal(order.totalAmount,0,'POINT',0,'NONE')} + 'đ'"></strong></div>
+          <div>Nội dung CK: <strong style="color:#4f46e5" th:text="'DonHang' + ${order.id}"></strong></div>
+        </div>
+        <p style="font-size:12px;color:#9ca3af;margin-top:12px">Đơn hàng sẽ được xác nhận sau khi shop kiểm tra thanh toán</p>
+      </div>
+
+      <div class="order-actions">
+        <a class="btn btn-outline" th:href="@{/orders}">ĐƠN HÀNG CỦA TÔI</a>
+        <a class="btn" th:href="@{/}">TIẾP TỤC MUA SẮM</a>
+        <!-- Huỷ đơn chưa thanh toán -->
+        <form th:if="${order.status == 'PENDING_PAYMENT'}"
+              th:action="@{/orders/{id}/cancel(id=${order.id})}" method="post" style="flex:1">
+          <button class="btn btn-danger" type="submit" style="width:100%"
+                  onclick="return confirm('Huỷ đơn này?')">HUỶ ĐƠN</button>
+        </form>
+        <!-- Tiền mặt: huỷ ngay -->
+        <form th:if="${order.status == 'PROCESSING' and order.paymentMethod != 'BANK'}"
+              th:action="@{/orders/{id}/cancel(id=${order.id})}" method="post"
+              onsubmit="return confirm('Xác nhận huỷ đơn?')" style="flex:1">
+          <button class="btn btn-danger" type="submit" style="width:100%">HUỶ ĐƠN HÀNG</button>
+        </form>
+      </div>
+
+      <!-- Chuyển khoản: nhập thông tin hoàn tiền + modal xác nhận -->
+      <form id="refund-form" class="refund-box"
+            th:if="${order.status == 'PROCESSING' and order.paymentMethod == 'BANK'}"
+            th:action="@{/orders/{id}/cancel(id=${order.id})}" method="post">
+        <h3>HUỶ ĐƠN &amp; YÊU CẦU HOÀN TIỀN</h3>
+        <p class="refund-note">Đơn đã thanh toán chuyển khoản. Nhập tài khoản để shop hoàn lại tiền:</p>
+        <label>Ngân hàng</label>
+        <input type="text" name="refundBank" placeholder="VD: Vietcombank" required>
+        <label>Số tài khoản</label>
+        <input type="text" name="refundAccount" placeholder="Số tài khoản nhận tiền" required>
+        <label>Chủ tài khoản</label>
+        <input type="text" name="refundAccountName" th:value="${order.recipientName}" placeholder="Tên chủ tài khoản">
+        <button type="button" class="btn btn-danger"
+                onclick="document.getElementById('refund-confirm-modal').classList.remove('hidden')">
+          HUỶ ĐƠN &amp; HOÀN TIỀN
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal xác nhận yêu cầu hoàn tiền -->
+  <div id="refund-confirm-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-icon">💸</div>
+      <div class="modal-title">Xác nhận yêu cầu hoàn tiền</div>
+      <div class="modal-desc">
+        Sau khi xác nhận, đơn hàng sẽ bị huỷ và shop sẽ hoàn tiền vào tài khoản bạn vừa nhập.
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel"
+                onclick="document.getElementById('refund-confirm-modal').classList.add('hidden')">Quay lại</button>
+        <button class="modal-btn modal-btn-confirm"
+                onclick="document.getElementById('refund-form').submit()">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+
+  <div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>

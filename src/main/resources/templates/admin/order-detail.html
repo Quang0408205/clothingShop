@@ -1,0 +1,129 @@
+<!doctype html>
+<div th:replace="admin/layout">
+  <div th:fragment="content" class="max-w-7xl mx-auto">
+
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold" th:text="'Đơn hàng ORD-' + ${order.id}">Đơn hàng</h1>
+      <a th:href="@{/admin/orders}" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">← Quay lại</a>
+    </div>
+
+    <!-- Flash messages -->
+    <div th:if="${success}" class="mb-4 p-4 rounded-lg bg-green-100 border border-green-300 text-green-800 font-medium flex items-center gap-2">
+      <span>✓</span> <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="mb-4 p-4 rounded-lg bg-red-100 border border-red-300 text-red-800 font-medium" th:text="${error}"></div>
+
+    <div class="bg-white rounded-lg p-6 border border-gray-200">
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-sm">
+        <div><span class="text-gray-500">Người nhận:</span>
+          <strong th:text="${order.recipientName}"></strong></div>
+        <div><span class="text-gray-500">Điện thoại:</span>
+          <strong th:text="${order.phone}"></strong></div>
+        <div class="sm:col-span-2"><span class="text-gray-500">Địa chỉ:</span>
+          <strong th:text="${order.address}"></strong></div>
+        <div><span class="text-gray-500">Trạng thái:</span>
+          <strong th:text="${order.status == 'COMPLETED'} ? 'Hoàn thành' : (${order.status == 'CANCELLED'} ? 'Đã huỷ' : (${order.status == 'REFUNDING'} ? 'Chờ hoàn tiền' : (${order.status == 'PENDING_PAYMENT'} ? 'Chờ thanh toán' : 'Đang xử lý')))"></strong></div>
+        <div><span class="text-gray-500">Ngày đặt:</span>
+          <strong th:text="${order.createdAt != null} ? ${#temporals.format(order.createdAt,'dd/MM/yyyy HH:mm')} : '-'"></strong></div>
+        <div><span class="text-gray-500">Thanh toán:</span>
+          <strong th:text="${order.paymentMethod == 'BANK'} ? 'Chuyển khoản' : 'Tiền mặt'"></strong></div>
+        <div class="sm:col-span-2" th:if="${order.note != null and !order.note.isBlank()}">
+          <span class="text-gray-500">Ghi chú:</span> <strong th:text="${order.note}"></strong></div>
+      </div>
+
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead>
+          <tr class="text-left text-sm text-gray-500">
+            <th class="px-3 py-2">Sản phẩm</th>
+            <th class="px-3 py-2">Size</th>
+            <th class="px-3 py-2">Đơn giá</th>
+            <th class="px-3 py-2">Số lượng</th>
+            <th class="px-3 py-2">Thành tiền</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr th:each="it : ${order.items}">
+            <td class="px-3 py-3" th:text="${it.productName}"></td>
+            <td class="px-3 py-3" th:text="${it.size != null ? it.size : '-'}"></td>
+            <td class="px-3 py-3" th:text="${#numbers.formatDecimal(it.price,0,'POINT',0,'NONE')} + 'đ'"></td>
+            <td class="px-3 py-3" th:text="${it.quantity}"></td>
+            <td class="px-3 py-3" th:text="${#numbers.formatDecimal(it.lineTotal,0,'POINT',0,'NONE')} + 'đ'"></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="font-bold">
+            <td class="px-3 py-3" colspan="4">Tổng cộng</td>
+            <td class="px-3 py-3 text-red-600"
+                th:text="${#numbers.formatDecimal(order.totalAmount,0,'POINT',0,'NONE')} + 'đ'"></td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <!-- Thông tin hoàn tiền -->
+      <div class="mt-6 p-4 rounded border border-yellow-300 bg-yellow-50 text-sm"
+           th:if="${order.status == 'REFUNDING'}">
+        <p class="font-bold mb-2 text-yellow-800">💸 Đơn chuyển khoản — chờ hoàn tiền cho khách</p>
+        <div>Ngân hàng: <strong th:text="${order.refundBank}"></strong></div>
+        <div>Số tài khoản: <strong th:text="${order.refundAccount}"></strong></div>
+        <div>Chủ tài khoản: <strong th:text="${order.refundAccountName}"></strong></div>
+        <div class="mt-1">Số tiền hoàn: <strong class="text-red-600"
+             th:text="${#numbers.formatDecimal(order.totalAmount,0,'POINT',0,'NONE')} + 'đ'"></strong></div>
+      </div>
+
+      <!-- Admin đổi trạng thái -->
+      <div class="mt-6 flex flex-wrap gap-3">
+        <!-- Xác nhận đã nhận được tiền chuyển khoản -->
+        <form th:if="${order.status == 'PENDING_PAYMENT'}"
+              th:action="@{/admin/orders/{id}/confirm-payment(id=${order.id})}" method="post">
+          <button type="submit"
+                  class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded">✓ Xác nhận đã nhận thanh toán</button>
+        </form>
+        <form th:if="${order.status == 'PENDING_PAYMENT'}"
+              th:action="@{/admin/orders/{id}/cancel(id=${order.id})}" method="post"
+              onsubmit="return confirm('Huỷ đơn chưa thanh toán này?')">
+          <button type="submit"
+                  class="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2 rounded">✕ Huỷ (chưa thanh toán)</button>
+        </form>
+
+        <form th:if="${order.status == 'PROCESSING'}"
+              th:action="@{/admin/orders/{id}/complete(id=${order.id})}" method="post">
+          <button type="submit"
+                  class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded">✓ Đánh dấu hoàn thành</button>
+        </form>
+        <form th:if="${order.status == 'PROCESSING'}"
+              th:action="@{/admin/orders/{id}/cancel(id=${order.id})}" method="post"
+              onsubmit="return confirm('Huỷ đơn này? Số lượng sẽ được hoàn lại kho.')">
+          <button type="submit"
+                  class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded">✕ Huỷ đơn (hoàn kho)</button>
+        </form>
+
+        <!-- Nút hoàn tiền: dùng modal thay vì confirm() -->
+        <form id="refunded-form" th:if="${order.status == 'REFUNDING'}"
+              th:action="@{/admin/orders/{id}/refunded(id=${order.id})}" method="post">
+          <button type="button" onclick="document.getElementById('refund-modal').classList.remove('hidden')"
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded">✓ Đã hoàn tiền</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal xác nhận hoàn tiền -->
+    <div id="refund-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/40" onclick="document.getElementById('refund-modal').classList.add('hidden')"></div>
+      <div class="relative bg-white rounded-xl shadow-xl p-8 max-w-sm w-full mx-4 text-center">
+        <div class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+          <span class="text-2xl">💸</span>
+        </div>
+        <h3 class="text-lg font-bold text-gray-800 mb-2">Xác nhận hoàn tiền</h3>
+        <p class="text-sm text-gray-500 mb-6">Bạn xác nhận đã chuyển khoản hoàn tiền thành công cho khách hàng?</p>
+        <div class="flex gap-3">
+          <button onclick="document.getElementById('refund-modal').classList.add('hidden')"
+                  class="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">Huỷ</button>
+          <button onclick="document.getElementById('refunded-form').submit()"
+                  class="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium">Xác nhận</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

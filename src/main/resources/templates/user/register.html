@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng ký — MoPo</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+  <div th:replace="~{fragments/layout :: header}"></div>
+
+  <div class="auth-wrap">
+    <form class="auth-card" th:action="@{/register}" th:object="${form}" method="post">
+      <h1>ĐĂNG KÝ TÀI KHOẢN</h1>
+
+      <div class="alert error" th:if="${error}" th:text="${error}">Lỗi</div>
+
+      <label>Họ và tên</label>
+      <input type="text" th:field="*{fullName}" placeholder="Nguyễn Văn A" required autofocus>
+
+      <label>Email</label>
+      <input type="email" th:field="*{email}" placeholder="email@example.com" required>
+
+      <label>Số điện thoại</label>
+      <input type="text" th:field="*{phone}" placeholder="09xxxxxxxx">
+
+      <label>Mật khẩu</label>
+      <input type="password" th:field="*{password}" placeholder="Tối thiểu 6 ký tự" required>
+
+      <button class="btn" type="submit">ĐĂNG KÝ</button>
+
+      <p class="auth-foot">Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a></p>
+    </form>
+  </div>
+
+  <div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>

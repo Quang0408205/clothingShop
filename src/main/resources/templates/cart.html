@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giỏ hàng — MoPo</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+  <div th:replace="~{fragments/layout :: header}"></div>
+
+  <div class="container">
+    <div class="cart-head">
+      <h1 class="page-title">GIỎ HÀNG</h1>
+      <div class="cart-links">
+        <a th:href="@{/orders}">🧾 Đơn hàng đã đặt</a>
+      </div>
+    </div>
+    <div class="alert error" th:if="${err}" th:text="${err}">Lỗi</div>
+
+    <!-- Giỏ trống -->
+    <div class="empty" th:if="${#lists.isEmpty(lines)}">
+      <p>Giỏ hàng của bạn đang trống.</p>
+      <a class="btn" th:href="@{/}">TIẾP TỤC MUA SẮM</a>
+    </div>
+
+    <!-- Có sản phẩm -->
+    <div class="cart-layout" th:unless="${#lists.isEmpty(lines)}">
+      <!-- Danh sách sản phẩm -->
+      <div class="cart-list">
+        <div class="cart-row" th:each="line : ${lines}">
+          <a th:href="@{/products/{id}(id=${line.product.id})}">
+            <img class="cart-thumb" th:src="@{'/' + ${line.product.thumbnail}}" th:alt="${line.product.name}">
+          </a>
+          <div class="cart-info">
+            <a class="cart-name" th:href="@{/products/{id}(id=${line.product.id})}" th:text="${line.product.name}">Tên</a>
+            <span class="cart-size" th:if="${line.size != null}">Size: <strong th:text="${line.size}">M</strong></span>
+            <span class="cart-unit" th:text="${#numbers.formatDecimal(line.product.price,0,'POINT',0,'NONE')} + 'đ'">0đ</span>
+          </div>
+
+          <form class="cart-qty" th:action="@{/cart/update}" method="post">
+            <input type="hidden" name="productId" th:value="${line.product.id}">
+            <input type="hidden" name="size" th:value="${line.size}">
+            <button class="cq-btn" type="submit" name="quantity"
+                    th:value="${line.quantity > 1 ? line.quantity - 1 : 1}" title="Giảm">−</button>
+            <span class="cq-num" th:text="${line.quantity}">1</span>
+            <button class="cq-btn" type="submit" name="quantity"
+                    th:value="${line.quantity + 1}" title="Tăng">+</button>
+          </form>
+
+          <span class="cart-sub" th:text="${#numbers.formatDecimal(line.subtotal,0,'POINT',0,'NONE')} + 'đ'">0đ</span>
+
+          <form th:action="@{/cart/remove}" method="post">
+            <input type="hidden" name="productId" th:value="${line.product.id}">
+            <input type="hidden" name="size" th:value="${line.size}">
+            <button class="cart-del" type="submit" title="Xóa">✕</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tóm tắt + đặt hàng -->
+      <aside class="cart-summary">
+        <h3>THÔNG TIN GIAO HÀNG</h3>
+        <form th:action="@{/cart/checkout}" method="post">
+          <label>Người nhận</label>
+          <input type="text" name="recipientName" th:value="${user.fullName}" required>
+          <label>Số điện thoại</label>
+          <input type="text" name="phone" th:value="${user.phone}" placeholder="09xxxxxxxx" required>
+          <label>Địa chỉ giao hàng</label>
+          <input type="text" name="address" placeholder="Số nhà, đường, phường, quận, tỉnh" required>
+
+          <label>Ghi chú <span class="opt">(không bắt buộc)</span></label>
+          <textarea name="note" rows="2" placeholder="Ghi chú cho đơn hàng (giờ giao, lưu ý...)"></textarea>
+
+          <label>Phương thức thanh toán</label>
+          <div class="pay-methods">
+            <label class="pay-option">
+              <input type="radio" name="paymentMethod" value="CASH" checked onclick="showPayInfo('cash')">
+              <span>💵 Thanh toán tiền mặt</span>
+            </label>
+            <label class="pay-option">
+              <input type="radio" name="paymentMethod" value="BANK" onclick="showPayInfo('bank')">
+              <span>🏦 Thanh toán chuyển khoản</span>
+            </label>
+          </div>
+
+          <!-- Preview QR chuyển khoản -->
+          <div id="bank-info" style="display:none;margin:12px 0;padding:14px;background:#f0f4ff;border:1px solid #c7d2fe;border-radius:10px;text-align:center">
+            <p style="font-size:13px;color:#4338ca;font-weight:600;margin-bottom:10px">📱 Sau khi đặt hàng, bạn sẽ thấy mã QR để chuyển khoản</p>
+            <img th:src="@{'https://img.vietqr.io/image/' + ${bankId} + '-' + ${bankAccount} + '-compact.png?accountName=' + ${bankName}}"
+                 alt="QR Chuyển khoản" style="width:160px;border-radius:8px;border:1px solid #e0e7ff">
+            <p style="font-size:12px;color:#6b7280;margin-top:8px">
+              <strong th:text="${bankName}"></strong><br>
+              STK: <strong th:text="${bankAccount}"></strong>
+            </p>
+          </div>
+
+          <div class="summary-total">
+            <span>Tổng cộng</span>
+            <strong th:text="${#numbers.formatDecimal(total,0,'POINT',0,'NONE')} + 'đ'">0đ</strong>
+          </div>
+          <button class="btn" type="submit">ĐẶT HÀNG</button>
+        </form>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    function showPayInfo(type) {
+      document.getElementById('bank-info').style.display = type === 'bank' ? 'block' : 'none';
+    }
+  </script>
+
+  <div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>

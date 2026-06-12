@@ -1,0 +1,247 @@
+<!doctype html>
+<div th:replace="admin/layout">
+  <div th:fragment="content" class="max-w-7xl mx-auto">
+
+    <!-- Header + Year selector -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <h1 class="text-2xl font-semibold">Thống kê doanh thu</h1>
+      <form method="get" action="/admin/reports" class="flex items-center gap-2">
+        <label class="text-sm text-gray-500">Năm:</label>
+        <select name="year" onchange="this.form.submit()"
+                class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm
+                       bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option th:each="y : ${years}" th:value="${y}" th:text="${y}"
+                  th:selected="${y == year}"></option>
+        </select>
+      </form>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Doanh thu hoàn thành</p>
+        <p class="text-2xl font-bold text-indigo-600"
+           th:text="${#numbers.formatDecimal(yearTotal, 0, 'POINT', 0, 'NONE')} + 'đ'"></p>
+        <p class="text-xs text-gray-400 mt-1" th:text="'Năm ' + ${year}"></p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Tổng đơn hàng</p>
+        <p class="text-2xl font-bold" th:text="${yearOrders}"></p>
+        <p class="text-xs text-gray-400 mt-1">Tất cả trạng thái</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Đơn hoàn thành</p>
+        <p class="text-2xl font-bold text-green-600" th:text="${completedCount}"></p>
+        <p class="text-xs text-gray-400 mt-1">Trạng thái COMPLETED</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Doanh thu TB / đơn</p>
+        <p class="text-2xl font-bold text-orange-500"
+           th:text="${#numbers.formatDecimal(avgOrder, 0, 'POINT', 0, 'NONE')} + 'đ'"></p>
+        <p class="text-xs text-gray-400 mt-1">Trên đơn hoàn thành</p>
+      </div>
+    </div>
+
+    <!-- Bar chart: Monthly revenue -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+      <h2 class="text-base font-semibold mb-1">Doanh thu theo tháng</h2>
+      <p class="text-xs text-gray-400 mb-4" th:text="'Năm ' + ${year} + ' — chỉ tính đơn COMPLETED'"></p>
+      <canvas id="revenueChart" height="90"></canvas>
+    </div>
+
+    <!-- Line chart: Order count -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+      <h2 class="text-base font-semibold mb-1">Số lượng đơn hàng theo tháng</h2>
+      <p class="text-xs text-gray-400 mb-4" th:text="'Năm ' + ${year} + ' — tất cả trạng thái'"></p>
+      <canvas id="orderChart" height="90"></canvas>
+    </div>
+
+    <!-- Bottom: Top products + Status -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Top 10 sản phẩm -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <h2 class="text-base font-semibold mb-4">Top 10 sản phẩm bán chạy nhất</h2>
+        <div th:if="${#lists.isEmpty(topProducts)}"
+             class="text-sm text-gray-400 py-8 text-center">Chưa có dữ liệu cho năm này.</div>
+        <table th:unless="${#lists.isEmpty(topProducts)}" class="min-w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-100 dark:border-gray-700">
+              <th class="pb-2 pr-2">#</th>
+              <th class="pb-2 pr-2">Sản phẩm</th>
+              <th class="pb-2 pr-2 text-right">SL bán</th>
+              <th class="pb-2 text-right">Doanh thu</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
+            <tr th:each="p, s : ${topProducts}" class="hover:bg-gray-50 dark:hover:bg-gray-700/20">
+              <td class="py-2 pr-2 text-gray-400 font-bold text-xs" th:text="${s.index + 1}"></td>
+              <td class="py-2 pr-2 font-medium max-w-[180px] truncate" th:text="${p[0]}"></td>
+              <td class="py-2 pr-2 text-right text-gray-500" th:text="${p[1]}"></td>
+              <td class="py-2 text-right font-semibold text-indigo-600"
+                  th:text="${#numbers.formatDecimal(p[2], 0, 'POINT', 0, 'NONE')} + 'đ'"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Phân tích trạng thái -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <h2 class="text-base font-semibold mb-4">Phân tích trạng thái đơn hàng</h2>
+        <canvas id="statusChart" height="180" class="mb-4"></canvas>
+        <div th:if="${#lists.isEmpty(statusBreakdown)}"
+             class="text-sm text-gray-400 py-4 text-center">Chưa có dữ liệu.</div>
+        <table th:unless="${#lists.isEmpty(statusBreakdown)}" class="min-w-full text-sm mt-2">
+          <thead>
+            <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-100 dark:border-gray-700">
+              <th class="pb-2">Trạng thái</th>
+              <th class="pb-2 text-right">Số đơn</th>
+              <th class="pb-2 text-right">Tổng tiền</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
+            <tr th:each="s : ${statusBreakdown}">
+              <td class="py-2">
+                <span th:text="${s[0]}"
+                      th:classappend="${s[0] == 'COMPLETED'}   ? 'bg-green-100 text-green-700' :
+                                      (${s[0] == 'PROCESSING'} ? 'bg-yellow-100 text-yellow-700' :
+                                      (${s[0] == 'REFUNDING'}  ? 'bg-blue-100 text-blue-700' :
+                                                                  'bg-gray-100 text-gray-600'))"
+                      class="text-xs font-semibold px-2 py-0.5 rounded-full"></span>
+              </td>
+              <td class="py-2 text-right" th:text="${s[1]}"></td>
+              <td class="py-2 text-right font-semibold"
+                  th:text="${#numbers.formatDecimal(s[2], 0, 'POINT', 0, 'NONE')} + 'đ'"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Monthly detail table -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mt-6">
+      <h2 class="text-base font-semibold mb-4">Bảng chi tiết doanh thu theo tháng</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-gray-500 uppercase border-b border-gray-100 dark:border-gray-700">
+              <th class="pb-2 pr-6">Tháng</th>
+              <th class="pb-2 pr-6 text-right">Doanh thu</th>
+              <th class="pb-2 pr-6 text-right">Số đơn</th>
+              <th class="pb-2">Tỉ lệ so với tháng cao nhất</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50" id="detailTbody"></tbody>
+          <tfoot>
+            <tr class="border-t-2 border-gray-200 dark:border-gray-600 font-bold text-sm">
+              <td class="pt-3 pr-6">Tổng năm</td>
+              <td class="pt-3 pr-6 text-right text-indigo-600"
+                  th:text="${#numbers.formatDecimal(yearTotal, 0, 'POINT', 0, 'NONE')} + 'đ'"></td>
+              <td class="pt-3 pr-6 text-right" th:text="${yearOrders}"></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script th:inline="javascript">
+      const monthlyRevenue = /*[[${monthly}]]*/ [];
+      const monthlyCounts  = /*[[${counts}]]*/ [];
+      const statusData     = /*[[${statusBreakdown}]]*/ [];
+      const monthLabels    = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+
+      // Bar chart – doanh thu
+      new Chart(document.getElementById('revenueChart'), {
+        type: 'bar',
+        data: {
+          labels: monthLabels,
+          datasets: [{
+            label: 'Doanh thu (đ)',
+            data: monthlyRevenue,
+            backgroundColor: 'rgba(99,102,241,0.75)',
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ctx.parsed.y.toLocaleString('vi-VN') + 'đ' } }
+          },
+          scales: {
+            y: { ticks: { callback: v => (v / 1_000_000).toFixed(0) + 'tr' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      // Line chart – số đơn
+      new Chart(document.getElementById('orderChart'), {
+        type: 'line',
+        data: {
+          labels: monthLabels,
+          datasets: [{
+            label: 'Số đơn',
+            data: monthlyCounts,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16,185,129,0.08)',
+            borderWidth: 2.5,
+            pointRadius: 5,
+            tension: 0.35,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      // Doughnut – trạng thái
+      const statusColors = { COMPLETED:'#10b981', PROCESSING:'#f59e0b', REFUNDING:'#3b82f6', CANCELLED:'#9ca3af' };
+      if (statusData.length > 0) {
+        new Chart(document.getElementById('statusChart'), {
+          type: 'doughnut',
+          data: {
+            labels: statusData.map(s => s[0]),
+            datasets: [{ data: statusData.map(s => Number(s[1])),
+              backgroundColor: statusData.map(s => statusColors[s[0]] || '#e5e7eb'),
+              borderWidth: 2 }]
+          },
+          options: { responsive: true, plugins: { legend: { position: 'bottom' } }, cutout: '62%' }
+        });
+      }
+
+      // Monthly detail table
+      const maxRev = Math.max(...monthlyRevenue.map(Number), 1);
+      const tbody = document.getElementById('detailTbody');
+      monthLabels.forEach((m, i) => {
+        const rev = Number(monthlyRevenue[i]) || 0;
+        const cnt = Number(monthlyCounts[i]) || 0;
+        const pct = Math.round(rev / maxRev * 100);
+        tbody.innerHTML += `
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/20">
+            <td class="py-2 pr-6 font-medium">${m}</td>
+            <td class="py-2 pr-6 text-right ${rev > 0 ? 'text-indigo-600 font-semibold' : 'text-gray-400'}">
+              ${rev > 0 ? rev.toLocaleString('vi-VN') + 'đ' : '—'}
+            </td>
+            <td class="py-2 pr-6 text-right">${cnt || '—'}</td>
+            <td class="py-2">
+              <div class="flex items-center gap-2">
+                <div class="flex-1 h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                  <div class="h-2 rounded-full bg-indigo-500" style="width:${pct}%"></div>
+                </div>
+                <span class="text-xs text-gray-400 w-8 text-right">${pct}%</span>
+              </div>
+            </td>
+          </tr>`;
+      });
+    </script>
+  </div>
+</div>

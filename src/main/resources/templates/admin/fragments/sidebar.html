@@ -1,0 +1,46 @@
+<!-- Sidebar fragment -->
+<div th:fragment="sidebar">
+  <div class="p-6">
+    <a href="/admin/reports" class="text-2xl font-semibold flex items-center gap-3 hover:opacity-80">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-indigo-600 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 1L3 5v6c0 5.25 3.75 10.15 9 11.35C17.25 21.15 21 16.25 21 11V5L12 1zm0 2.18l7 3.12V11c0 4.25-2.9 8.22-7 9.44C7.9 19.22 5 15.25 5 11V6.3l7-3.12zM11 7v6h2V7h-2zm0 8v2h2v-2h-2z"/>
+      </svg>
+      <span>Quản trị MoPo</span>
+    </a>
+  </div>
+
+  <nav class="px-4 pb-6">
+    <ul class="space-y-1">
+      <li>
+        <a href="/admin/reports" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100">
+          <span class="w-5">📊</span>
+          <span>Báo cáo</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/users" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100">
+          <span class="w-5">👥</span>
+          <span>Người dùng</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/orders" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100">
+          <span class="w-5">🧾</span>
+          <span>Đơn hàng</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/products" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100">
+          <span class="w-5">👕</span>
+          <span>Sản phẩm</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/categories" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100">
+          <span class="w-5">🏷️</span>
+          <span>Danh mục</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</div>

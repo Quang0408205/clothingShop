@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:replace="admin/layout">
+  <div th:fragment="content" class="max-w-7xl mx-auto">
+
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <h1 class="text-2xl font-bold">Quản lý sản phẩm</h1>
+      <a th:href="@{/admin/products/add}"
+         class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
+        + Thêm sản phẩm
+      </a>
+    </div>
+
+    <!-- Search -->
+    <form method="get" action="/admin/products" class="mb-4 flex gap-2">
+      <input type="text" name="q" th:value="${q}"
+             placeholder="Tìm theo tên sản phẩm..."
+             class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:bg-gray-700 dark:text-white" />
+      <button type="submit"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg">Tìm</button>
+      <a th:if="${q != null and !#strings.isEmpty(q)}" href="/admin/products"
+         class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-sm font-medium px-4 py-2 rounded-lg">Xoá lọc</a>
+    </form>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-700/50">
+          <tr class="text-left text-xs text-gray-500 uppercase">
+            <th class="px-4 py-3">ID</th>
+            <th class="px-4 py-3">Tên</th>
+            <th class="px-4 py-3">Danh mục</th>
+            <th class="px-4 py-3">Giá</th>
+            <th class="px-4 py-3">Tồn kho</th>
+            <th class="px-4 py-3 text-right">Hành động</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          <tr th:if="${products.content.isEmpty()}">
+            <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500">Không tìm thấy sản phẩm nào.</td>
+          </tr>
+          <tr th:each="product : ${products.content}" class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+            <td class="px-4 py-3 text-sm" th:text="${product.id}"></td>
+            <td class="px-4 py-3 font-medium text-sm" th:text="${product.name}"></td>
+            <td class="px-4 py-3 text-sm text-gray-500"
+                th:text="${product.category != null ? product.category.name : '—'}"></td>
+            <td class="px-4 py-3 text-sm"
+                th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'NONE')} + 'đ'"></td>
+            <td class="px-4 py-3 text-sm" th:text="${product.stock}"></td>
+            <td class="px-4 py-3 text-right whitespace-nowrap space-x-2">
+              <a th:href="@{/admin/products/edit/{id}(id=${product.id})}"
+                 class="inline-block bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium px-3 py-1 rounded">Sửa</a>
+              <a th:href="@{/admin/products/delete/{id}(id=${product.id})}"
+                 onclick="return confirm('Bạn có chắc muốn xóa?')"
+                 class="inline-block bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-3 py-1 rounded">Xóa</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="px-5 py-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-700">
+        <span class="text-sm text-gray-500">
+          Tổng: <strong th:text="${products.totalElements}"></strong> sản phẩm
+        </span>
+        <div class="flex items-center gap-2">
+          <a th:href="@{/admin/products(page=${products.number - 1}, q=${q})}"
+             th:classappend="${products.number == 0} ? 'pointer-events-none opacity-40' : ''"
+             class="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-sm">← Trước</a>
+          <span class="text-sm text-gray-600 dark:text-gray-300"
+                th:text="${products.number + 1} + ' / ' + ${products.totalPages}"></span>
+          <a th:href="@{/admin/products(page=${products.number + 1}, q=${q})}"
+             th:classappend="${products.number + 1 >= products.totalPages} ? 'pointer-events-none opacity-40' : ''"
+             class="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-sm">Sau →</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

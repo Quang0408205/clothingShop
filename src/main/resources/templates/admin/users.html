@@ -1,0 +1,90 @@
+<!doctype html>
+<div th:replace="admin/layout">
+  <div th:fragment="content" class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-4">Người dùng</h1>
+
+    <!-- Search -->
+    <form method="get" action="/admin/users" class="mb-4 flex gap-2">
+      <input type="text" name="q" th:value="${q}"
+             placeholder="Tìm theo tên hoặc email..."
+             class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:bg-gray-700 dark:text-white" />
+      <button type="submit"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg">Tìm</button>
+      <a th:if="${q != null and !#strings.isEmpty(q)}" href="/admin/users"
+         class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-sm font-medium px-4 py-2 rounded-lg">Xoá lọc</a>
+    </form>
+
+    <!-- Flash messages -->
+    <div th:if="${success}" class="mb-4 p-3 rounded-lg bg-green-100 text-green-800 text-sm" th:text="${success}"></div>
+    <div th:if="${error}"   class="mb-4 p-3 rounded-lg bg-red-100 text-red-800 text-sm"   th:text="${error}"></div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-700/50">
+          <tr class="text-left text-xs text-gray-500 uppercase">
+            <th class="px-4 py-3">Mã</th>
+            <th class="px-4 py-3">Họ tên</th>
+            <th class="px-4 py-3">Email</th>
+            <th class="px-4 py-3">Điện thoại</th>
+            <th class="px-4 py-3">Vai trò</th>
+            <th class="px-4 py-3">Trạng thái</th>
+            <th class="px-4 py-3 text-right">Hành động</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          <tr th:each="u : ${users.content}" class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+            <td class="px-4 py-3 text-sm" th:text="${u.id}"></td>
+            <td class="px-4 py-3 font-medium text-sm" th:text="${u.fullName}"></td>
+            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300" th:text="${u.email}"></td>
+            <td class="px-4 py-3 text-sm text-gray-500" th:text="${u.phone != null ? u.phone : '—'}"></td>
+            <td class="px-4 py-3">
+              <span th:text="${u.role}"
+                    th:classappend="${u.role == 'ADMIN'} ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'"
+                    class="text-xs font-semibold px-2 py-0.5 rounded-full"></span>
+            </td>
+            <td class="px-4 py-3">
+              <span th:if="${u.enabled}"  class="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Hoạt động</span>
+              <span th:unless="${u.enabled}" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600">Đã khoá</span>
+            </td>
+            <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
+              <a th:href="@{'/admin/users/edit/' + ${u.id}}"
+                 class="inline-block text-indigo-600 hover:text-indigo-800 text-sm font-medium px-2 py-1">Sửa</a>
+
+              <form th:action="@{'/admin/users/toggle/' + ${u.id}}" method="post" class="inline">
+                <button type="submit"
+                        th:text="${u.enabled} ? 'Khoá' : 'Mở khoá'"
+                        th:class="${u.enabled}
+                            ? 'text-yellow-600 hover:text-yellow-800 text-sm font-medium px-2 py-1'
+                            : 'text-green-600 hover:text-green-800 text-sm font-medium px-2 py-1'">
+                </button>
+              </form>
+
+              <form th:action="@{'/admin/users/delete/' + ${u.id}}" method="post" class="inline"
+                    th:if="${u.role != 'ADMIN'}"
+                    onsubmit="return confirm('Xoá tài khoản này?')">
+                <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium px-2 py-1">Xoá</button>
+              </form>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="px-5 py-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-700">
+        <span class="text-sm text-gray-500">
+          Tổng: <strong th:text="${users.totalElements}"></strong> người dùng
+        </span>
+        <div class="flex items-center gap-2">
+          <a th:href="@{/admin/users(page=${users.number - 1}, q=${q})}"
+             th:classappend="${users.number == 0} ? 'pointer-events-none opacity-40' : ''"
+             class="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-sm">← Trước</a>
+          <span class="text-sm text-gray-600 dark:text-gray-300"
+                th:text="${users.number + 1} + ' / ' + ${users.totalPages}"></span>
+          <a th:href="@{/admin/users(page=${users.number + 1}, q=${q})}"
+             th:classappend="${users.number + 1 >= users.totalPages} ? 'pointer-events-none opacity-40' : ''"
+             class="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-sm">Sau →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

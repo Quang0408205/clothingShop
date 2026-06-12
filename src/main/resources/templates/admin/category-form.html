@@ -1,0 +1,71 @@
+<!doctype html>
+<div th:replace="admin/layout">
+  <div th:fragment="content" class="max-w-xl mx-auto">
+    <div class="flex items-center gap-3 mb-6">
+      <a href="/admin/categories" class="text-gray-400 hover:text-gray-600 text-sm">← Danh sách</a>
+      <h1 class="text-2xl font-semibold"
+          th:text="${isEdit} ? (${isParent} ? 'Sửa nhóm cha' : 'Sửa danh mục con')
+                             : (${isParent} ? 'Thêm nhóm cha' : 'Thêm danh mục con')"></h1>
+    </div>
+
+    <div th:if="${error}" class="mb-4 p-3 rounded-lg bg-red-100 text-red-800 text-sm" th:text="${error}"></div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <form th:action="@{/admin/categories/save}" method="post" class="space-y-5">
+        <!-- Hidden id for edit -->
+        <input type="hidden" name="id" th:value="${category.id}">
+
+        <!-- Tên -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Tên danh mục <span class="text-red-500">*</span>
+          </label>
+          <input type="text" name="name" th:value="${category.name}" required
+                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm
+                        bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 placeholder="Ví dụ: Áo thun cổ tròn">
+        </div>
+
+        <!-- Slug -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Slug <span class="text-gray-400 text-xs">(để trống sẽ tự tạo)</span>
+          </label>
+          <input type="text" name="slug" th:value="${category.slug}"
+                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm
+                        bg-white dark:bg-gray-700 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 placeholder="ao-thun-co-tron">
+        </div>
+
+        <!-- Nhóm cha: chỉ hiện khi là danh mục con -->
+        <div th:if="${!isParent}">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Thuộc nhóm cha <span class="text-red-500">*</span>
+          </label>
+          <select name="parentIdStr" required
+                  class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm
+                         bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">— Chọn nhóm cha —</option>
+            <option th:each="p : ${parents}"
+                    th:value="${p.id}"
+                    th:text="${p.name}"
+                    th:selected="${category.parentId != null and category.parentId == p.id}"></option>
+          </select>
+        </div>
+        <!-- Nếu là nhóm cha thì gửi parentIdStr rỗng -->
+        <input th:if="${isParent}" type="hidden" name="parentIdStr" value="">
+
+        <div class="flex gap-3 pt-2">
+          <button type="submit"
+                  class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-sm"
+                  th:text="${isEdit} ? 'Lưu thay đổi' : (${isParent} ? 'Thêm nhóm cha' : 'Thêm danh mục con')"></button>
+          <a href="/admin/categories"
+             class="flex-1 text-center border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300
+                    hover:bg-gray-50 dark:hover:bg-gray-700 font-medium py-2 rounded-lg text-sm">
+            Huỷ
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

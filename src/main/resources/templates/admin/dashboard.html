@@ -1,0 +1,86 @@
+<!doctype html>
+<html th:replace="admin/layout">
+<body>
+  <div th:fragment="content" class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-6">Bảng điều khiển</h1>
+
+    <!-- KPI cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="text-sm text-gray-500">Tổng doanh thu</div>
+        <div class="text-2xl font-bold mt-2 text-indigo-600"
+             th:text="${#numbers.formatDecimal(totalRevenue, 0, 'POINT', 0, 'NONE')} + 'đ'"></div>
+      </div>
+      <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="text-sm text-gray-500">Tổng đơn hàng</div>
+        <div class="text-2xl font-bold mt-2" th:text="${totalOrders}"></div>
+      </div>
+      <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="text-sm text-gray-500">Số người dùng</div>
+        <div class="text-2xl font-bold mt-2" th:text="${totalUsers}"></div>
+      </div>
+      <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="text-sm text-gray-500">Tỷ lệ tăng trưởng</div>
+        <div class="text-2xl font-bold mt-2" th:text="${#numbers.formatDecimal(growth, 1, 1)} + '%'"></div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Chart -->
+      <section class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold">Doanh thu theo tháng</h2>
+          <div class="text-sm text-gray-500" th:text="${currentYear}"></div>
+        </div>
+        <canvas id="revenueChart" class="w-full" style="max-height:260px"></canvas>
+      </section>
+
+      <!-- Latest orders -->
+      <section class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+        <h2 class="font-semibold mb-4">Đơn hàng mới nhất</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead>
+              <tr class="text-left text-xs text-gray-500 uppercase">
+                <th class="px-2 py-2">Mã đơn</th>
+                <th class="px-2 py-2">Khách hàng</th>
+                <th class="px-2 py-2">Số tiền</th>
+                <th class="px-2 py-2">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
+              <tr th:if="${latestOrders.content.isEmpty()}">
+                <td colspan="4" class="px-2 py-3 text-gray-400">Chưa có đơn hàng</td>
+              </tr>
+              <tr th:each="o : ${latestOrders.content}">
+                <td class="px-2 py-2 font-mono" th:text="'#' + ${o.id}"></td>
+                <td class="px-2 py-2" th:text="${o.recipientName}"></td>
+                <td class="px-2 py-2 font-semibold text-indigo-600"
+                    th:text="${#numbers.formatDecimal(o.totalAmount,0,'POINT',0,'NONE')} + 'đ'"></td>
+                <td class="px-2 py-2">
+                  <span th:text="${o.status == 'COMPLETED'} ? 'Hoàn thành' :
+                                  (${o.status == 'CANCELLED'} ? 'Đã huỷ' :
+                                  (${o.status == 'REFUNDING'} ? 'Chờ HT' : 'Đang xử lý'))"
+                        th:classappend="${o.status == 'COMPLETED'} ? 'bg-green-100 text-green-700' :
+                                        (${o.status == 'CANCELLED'} ? 'bg-gray-100 text-gray-600' :
+                                        (${o.status == 'REFUNDING'} ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'))"
+                        class="text-xs font-semibold px-2 py-0.5 rounded-full"></span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-4">
+          <a href="/admin/orders" class="text-sm text-indigo-600 hover:underline font-medium">Xem tất cả đơn hàng →</a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+  /*<![CDATA[*/
+    var ADMIN_MONTHLY = /*[[${monthly}]]*/ [];
+  /*]]>*/
+  </script>
+</body>
+</html>

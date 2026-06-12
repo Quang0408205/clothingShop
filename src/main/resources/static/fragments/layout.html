@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<!-- ===== HEADER ===== -->
+<header th:fragment="header" class="site-header">
+  <div class="topbar">FREESHIP ĐƠN TỪ 200K · ĐỔI TRẢ TRONG 30 NGÀY · HOTLINE 1900 0000</div>
+  <div class="header-main">
+    <a class="logo" th:href="@{/}">YA<span>SHOP</span></a>
+    <nav class="nav">
+      <a th:href="@{/}">TRANG PHỤC</a>
+      <a th:href="@{/}">ÁO</a>
+      <a th:href="@{/}">QUẦN</a>
+      <a th:href="@{/}">GIÀY</a>
+      <a class="sale" th:href="@{/}">SALE</a>
+    </nav>
+    <div class="header-actions">
+      <span title="Tìm kiếm">🔍</span>
+
+      <!-- Chưa đăng nhập -->
+      <a sec:authorize="!isAuthenticated()" class="auth-link" th:href="@{/login}">Đăng nhập</a>
+
+      <!-- Đã đăng nhập -->
+      <span sec:authorize="isAuthenticated()" class="user-box">
+        👤 <span sec:authentication="name">user</span>
+        <form th:action="@{/logout}" method="post" style="display:inline">
+          <button type="submit" class="logout-btn">Đăng xuất</button>
+        </form>
+      </span>
+
+      <a title="Giỏ hàng" class="cart" th:href="@{/cart}">🛒<i th:text="${cartCount}">0</i></a>
+    </div>
+  </div>
+</header>
+
+<!-- ===== FOOTER ===== -->
+<footer th:fragment="footer" class="site-footer">
+  <div class="footer-cols">
+    <div>
+      <h4>YASHOP</h4>
+      <p>Thời trang nam tối giản, chất liệu công nghệ. Demo cửa hàng dựng bằng Spring Boot + Thymeleaf + MySQL.</p>
+    </div>
+    <div>
+      <h4>CHÍNH SÁCH</h4>
+      <a href="#">Chính sách đổi trả</a>
+      <a href="#">Chính sách bảo hành</a>
+      <a href="#">Hướng dẫn chọn size</a>
+      <a href="#">Phương thức thanh toán</a>
+    </div>
+    <div>
+      <h4>HỖ TRỢ</h4>
+      <a href="#">Trung tâm trợ giúp</a>
+      <a href="#">Hệ thống cửa hàng</a>
+      <a href="#">Liên hệ hợp tác</a>
+    </div>
+    <div>
+      <h4>KẾT NỐI</h4>
+      <a href="#">Facebook</a>
+      <a href="#">Instagram</a>
+      <a href="#">TikTok</a>
+      <a href="#">Youtube</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 YASHOP — Demo project. Không phải cửa hàng thật.</div>
+</footer>
+
+</body>
+</html>

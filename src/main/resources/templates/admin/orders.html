@@ -1,0 +1,70 @@
+<!doctype html>
+<div th:replace="admin/layout">
+  <div th:fragment="content" class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-6">Đơn hàng</h1>
+
+    <!-- Search -->
+    <form method="get" action="/admin/orders" class="mb-4 flex gap-2">
+      <input type="text" name="q" th:value="${q}"
+             placeholder="Tìm theo tên khách hàng..."
+             class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:bg-gray-700 dark:text-white" />
+      <button type="submit"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg">Tìm</button>
+      <a th:if="${q != null and !#strings.isEmpty(q)}" href="/admin/orders"
+         class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-sm font-medium px-4 py-2 rounded-lg">Xoá lọc</a>
+    </form>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-700/50">
+          <tr class="text-left text-xs text-gray-500 uppercase">
+            <th class="px-3 py-2">Mã đơn</th>
+            <th class="px-3 py-2">Khách hàng</th>
+            <th class="px-3 py-2">Điện thoại</th>
+            <th class="px-3 py-2">Tổng tiền</th>
+            <th class="px-3 py-2">Trạng thái</th>
+            <th class="px-3 py-2"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          <tr th:if="${orders.content.isEmpty()}">
+            <td colspan="6" class="px-3 py-6 text-center text-sm text-gray-500">Không tìm thấy đơn hàng nào.</td>
+          </tr>
+          <tr th:each="o : ${orders.content}" class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+            <td class="px-3 py-3 text-sm font-mono" th:text="'ORD-' + ${o.id}"></td>
+            <td class="px-3 py-3 text-sm" th:text="${o.recipientName}"></td>
+            <td class="px-3 py-3 text-sm text-gray-500" th:text="${o.phone}"></td>
+            <td class="px-3 py-3 text-sm font-semibold text-indigo-600"
+                th:text="${#numbers.formatDecimal(o.totalAmount,0,'POINT',0,'NONE')} + 'đ'"></td>
+            <td class="px-3 py-3">
+              <span th:text="${o.status == 'COMPLETED'} ? 'Hoàn thành' : (${o.status == 'CANCELLED'} ? 'Đã huỷ' : (${o.status == 'REFUNDING'} ? 'Chờ hoàn tiền' : (${o.status == 'PENDING_PAYMENT'} ? 'Chờ TT' : 'Đang xử lý')))"
+                    th:classappend="${o.status == 'COMPLETED'} ? 'bg-green-100 text-green-700' : (${o.status == 'CANCELLED'} ? 'bg-gray-100 text-gray-600' : (${o.status == 'REFUNDING'} ? 'bg-blue-100 text-blue-700' : (${o.status == 'PENDING_PAYMENT'} ? 'bg-amber-100 text-amber-700' : 'bg-yellow-100 text-yellow-700')))"
+                    class="text-xs font-semibold px-2 py-0.5 rounded-full"></span>
+            </td>
+            <td class="px-3 py-3">
+              <a th:href="@{/admin/orders/{id}(id=${o.id})}"
+                 class="text-indigo-600 hover:underline text-sm font-medium">Xem</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="px-5 py-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-700">
+        <span class="text-sm text-gray-500">
+          Tổng: <strong th:text="${orders.totalElements}"></strong> đơn hàng
+        </span>
+        <div class="flex items-center gap-2">
+          <a th:href="@{/admin/orders(page=${orders.number - 1}, q=${q})}"
+             th:classappend="${orders.number == 0} ? 'pointer-events-none opacity-40' : ''"
+             class="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-sm">← Trước</a>
+          <span class="text-sm text-gray-600 dark:text-gray-300"
+                th:text="${orders.number + 1} + ' / ' + ${orders.totalPages}"></span>
+          <a th:href="@{/admin/orders(page=${orders.number + 1}, q=${q})}"
+             th:classappend="${orders.number + 1 >= orders.totalPages} ? 'pointer-events-none opacity-40' : ''"
+             class="px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-sm">Sau →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

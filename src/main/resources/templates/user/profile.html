@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thông tin cá nhân — MoPo</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <style>
+    .pwd-section { margin-top: 8px; }
+    .pwd-toggle {
+      display: flex; align-items: center; gap: 8px;
+      width: 100%; padding: 12px 16px;
+      background: #f3f4f6; border: 1px solid #e5e7eb;
+      border-radius: 8px; cursor: pointer;
+      font-size: 14px; color: #374151; text-align: left;
+      transition: background .15s;
+    }
+    .pwd-toggle:hover { background: #e5e7eb; }
+    .pwd-form {
+      display: none; margin-top: 8px;
+      background: #f9fafb; border: 1px solid #e5e7eb;
+      border-radius: 8px; padding: 16px;
+    }
+    .pwd-form.open { display: block; }
+    .pwd-form label { display: block; font-size: 13px; color: #6b7280; margin: 10px 0 4px; }
+    .pwd-form input {
+      width: 100%; padding: 8px 12px; border: 1px solid #d1d5db;
+      border-radius: 6px; font-size: 14px; box-sizing: border-box;
+    }
+    .pwd-form input:focus { outline: none; border-color: #6366f1; }
+    .pwd-submit {
+      margin-top: 12px; width: 100%; padding: 10px;
+      background: #111; color: #fff; border: none;
+      border-radius: 6px; font-weight: 600; font-size: 13px;
+      letter-spacing: .05em; cursor: pointer;
+    }
+    .pwd-submit:hover { background: #333; }
+    .alert-pwd-ok  { background:#dcfce7; border:1px solid #86efac; color:#166534; padding:10px 14px; border-radius:8px; margin-bottom:10px; font-size:14px; }
+    .alert-pwd-err { background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; padding:10px 14px; border-radius:8px; margin-bottom:10px; font-size:14px; }
+    .input-eye { position: relative; }
+    .input-eye input { width: 100%; box-sizing: border-box; padding-right: 36px; }
+    .eye-btn {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; padding: 4px;
+      color: #9ca3af; line-height: 1;
+    }
+    .eye-btn:hover { color: #374151; }
+  </style>
+</head>
+<body>
+  <div th:replace="~{fragments/layout :: header}"></div>
+
+  <div class="container">
+    <h1 class="page-title">THÔNG TIN CÁ NHÂN</h1>
+
+    <div class="account-layout">
+      <!-- Thông tin tài khoản -->
+      <div class="account-card">
+        <div class="alert ok" th:if="${updated}">Đã cập nhật thông tin thành công.</div>
+
+        <div class="account-avatar">
+          <span th:text="${#strings.substring(user.fullName,0,1)}">A</span>
+        </div>
+
+        <form th:action="@{/account/update}" method="post">
+          <label>Email</label>
+          <input type="email" th:value="${user.email}" disabled>
+          <small class="opt">Email dùng để đăng nhập, không thể thay đổi.</small>
+
+          <label>Họ và tên</label>
+          <input type="text" name="fullName" th:value="${user.fullName}" required>
+
+          <label>Số điện thoại</label>
+          <input type="text" name="phone" th:value="${user.phone}" placeholder="09xxxxxxxx">
+
+          <label>Vai trò</label>
+          <input type="text" th:value="${user.role == 'ADMIN'} ? 'Quản trị viên' : 'Khách hàng'" disabled>
+
+          <button class="btn" type="submit">LƯU THAY ĐỔI</button>
+        </form>
+      </div>
+
+      <!-- Liên kết nhanh -->
+      <aside class="account-side">
+        <a class="account-link" th:href="@{/orders}">🧾 Đơn hàng của tôi</a>
+        <a class="account-link" th:href="@{/cart}">🛒 Giỏ hàng</a>
+
+        <!-- Đổi mật khẩu -->
+        <div class="pwd-section">
+          <div class="alert-pwd-ok"  th:if="${pwdSuccess}" th:text="${pwdSuccess}"></div>
+          <div class="alert-pwd-err" th:if="${pwdError}"   th:text="${pwdError}"></div>
+
+          <button class="pwd-toggle" type="button" onclick="togglePwd()">
+            🔒 Đổi mật khẩu
+          </button>
+          <div id="pwd-form" class="pwd-form" th:classappend="${pwdError != null} ? ' open' : ''">
+            <form th:action="@{/account/change-password}" method="post">
+              <label>Mật khẩu hiện tại</label>
+              <div class="input-eye">
+                <input id="pwd-cur" type="password" name="currentPassword" required placeholder="••••••••">
+                <button type="button" class="eye-btn" onclick="toggleEye('pwd-cur')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>
+              </div>
+              <label>Mật khẩu mới</label>
+              <div class="input-eye">
+                <input id="pwd-new" type="password" name="newPassword" required placeholder="Tối thiểu 6 ký tự">
+                <button type="button" class="eye-btn" onclick="toggleEye('pwd-new')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>
+              </div>
+              <label>Xác nhận mật khẩu mới</label>
+              <div class="input-eye">
+                <input id="pwd-confirm" type="password" name="confirmPassword" required placeholder="Nhập lại mật khẩu mới">
+                <button type="button" class="eye-btn" onclick="toggleEye('pwd-confirm')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>
+              </div>
+              <button class="pwd-submit" type="submit">ĐỔI MẬT KHẨU</button>
+            </form>
+          </div>
+        </div>
+
+        <a class="account-link" th:href="@{/}">🏬 Tiếp tục mua sắm</a>
+        <a class="account-link admin" th:if="${user.role == 'ADMIN'}" th:href="@{/admin/reports}">⚙️ Trang quản trị</a>
+        <form th:action="@{/logout}" method="post">
+          <button class="account-logout" type="submit">Đăng xuất</button>
+        </form>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    function togglePwd() {
+      document.getElementById('pwd-form').classList.toggle('open');
+    }
+    function toggleEye(inputId) {
+      var inp = document.getElementById(inputId);
+      inp.type = inp.type === 'text' ? 'password' : 'text';
+    }
+  </script>
+
+  <div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>

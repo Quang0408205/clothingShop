@@ -1,0 +1,21 @@
+<!-- Header fragment -->
+<div th:fragment="header">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <div class="flex items-center gap-4">
+        <button id="mobile-menu-button" class="md:hidden p-2 rounded-md hover:bg-gray-100">☰</button>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
+          <img src="/admin/images/avatar-placeholder.svg" alt="avatar" class="w-9 h-9 rounded-full bg-gray-300" />
+          <div class="text-sm">
+            <div class="font-medium">Quản trị viên</div>
+            <div class="text-xs text-gray-500">admin@huyrc.vn</div>
+          </div>
+          <a href="/logout" class="ml-2 px-3 py-1 rounded-md text-sm bg-red-100 text-red-700 hover:bg-red-200">Đăng xuất</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
